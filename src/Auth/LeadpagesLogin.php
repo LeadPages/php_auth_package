@@ -25,11 +25,13 @@ abstract class LeadpagesLogin implements LeadpagesToken
     public $tokenLabel = 'leadpages_security_token';
 
     public $token;
-    public $certFile = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
+    public $certFile;
 
     public function __construct(Client $client)
     {
         $this->client = $client;
+        $this->certFile = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
+
     }
 
     protected function hashUserNameAndPassword($username, $password)
