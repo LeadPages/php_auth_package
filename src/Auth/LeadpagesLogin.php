@@ -25,6 +25,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
     public $tokenLabel = 'leadpages_security_token';
 
     public $token;
+    public $certFile = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
 
     public function __construct(Client $client)
     {
@@ -54,7 +55,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
               $this->loginurl, //url
               [
                 'headers' => ['Authorization' => 'Basic ' . $authHash],
-		'verify' => false,
+		        'verify' =>  ['verify' => $this->certFile],
                 'body'    => $body //wp-plugin value makes session not expire
               ]);
             $this->response = $response->getBody();
@@ -89,7 +90,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
               $this->refreshUserToken, //url
               [
                 'headers' => ['LP-Security-Token' => $this->token],
-		'verify' => false,
+                'verify' =>  ['verify' => $this->certFile],
                 'body'    => $body //wp-plugin value makes session not expire
               ]);
             return json_decode($response->getBody(), true);
@@ -120,7 +121,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
               $this->loginCheckUrl,
               [
                 'headers' => ['LP-Security-Token' => $this->token],
-		'verify' => false,
+                'verify' =>  ['verify' => $this->certFile],
               ]);
             //return true as token is good
             $responseArray = json_decode($response->getBody(), true);
@@ -147,7 +148,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
               $this->userSessionCheckUrl,
               [
                 'headers' => ['LP-Security-Token' => $this->token],
-		'verify' => false,
+                'verify' =>  ['verify' => $this->certFile],
               ]);
             //return true as token is good
             $response = json_decode($response->getBody(), true);
