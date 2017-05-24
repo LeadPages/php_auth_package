@@ -12,9 +12,8 @@ abstract class LeadpagesLogin implements LeadpagesToken
 
     protected $client;
     public $response;
-    public $loginurl = 'https://api.leadpages.io/account/v1/sessions/';
+    public $loginurl = 'https://api.leadpages.io/account/v1/credentials';
     public $loginCheckUrl = 'https://api.leadpages.io/account/v1/sessions/current';
-    public $refreshUserToken = 'https://api.leadpages.io/account/v1/sessions/';
     public $userSessionCheckUrl = 'https://api.leadpages.io/account/v1/users/current';
 
     /**
@@ -51,14 +50,13 @@ abstract class LeadpagesLogin implements LeadpagesToken
     public function getUser($username, $password)
     {
         $authHash = $this->hashUserNameAndPassword($username, $password);
-        $body     = json_encode(['clientType' => 'wp-plugin']);
+        
         try {
-            $response       = $this->client->post(
-              $this->loginurl, //url
+            $response       = $this->client->get(
+              $this->loginurl, 
               [
                 'headers' => ['Authorization' => 'Basic ' . $authHash],
 		        'verify' => $this->certFile,
-                'body'    => $body //wp-plugin value makes session not expire
               ]);
             $this->response = $response->getBody();
             return $this;
@@ -79,38 +77,6 @@ abstract class LeadpagesLogin implements LeadpagesToken
         }
     }
 
-    /**
-     * Create a new token for user. This should be set to run via a cron
-     * ~ every 20-25 days as a users token lasts 30 days.
-     * @return $this|mixed
-     */
-    public function refreshUserToken()
-    {
-        $body = json_encode(['clientType' => 'wp-plugin']);
-        try {
-            $response = $this->client->post(
-              $this->refreshUserToken, //url
-              [
-                'headers' => ['LP-Security-Token' => $this->token],
-                'verify' => $this->certFile,
-                'body'    => $body //wp-plugin value makes session not expire
-              ]);
-            return json_decode($response->getBody(), true);
-        } catch (ClientException $e) {
-            $response       = [
-              'code'     => $e->getCode(),
-              'response' => $e->getMessage(),
-              'error'    => (bool)true
-            ];
-            $this->response = json_encode($response);
-            return $this;
-        } catch (ConnectException $e) {
-            $message = 'Can not connect to Leadpages Server:';
-            $response = $this->parseException($e, $message);
-            $this->response = json_encode($response);
-            return $this;
-        }
-    }
 
     /**
      * Check to see if you get a proper response back if you use the token stored in your DB
@@ -183,8 +149,10 @@ abstract class LeadpagesLogin implements LeadpagesToken
                 $this->deleteToken();
             }
             return $this->response; //return json encoded response for client to handle
-        }
-        $this->token = $responseArray['securityToken'];
+		}
+		$access_id = $responseArray['profiles']['BASE_20160216']['accessId'];
+		$access_key = $responseArray['accessKey'];
+        $this->token = 'LP ' . $access_id . ':' . $access_key;
         return 'success';
     }
 
