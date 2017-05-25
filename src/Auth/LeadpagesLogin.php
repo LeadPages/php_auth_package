@@ -64,11 +64,12 @@ abstract class LeadpagesLogin implements LeadpagesToken
             return $this;
 
         } catch (ClientException $e) {
-            $response       = [
+            $response = [
               'code'     => $e->getCode(),
               'response' => $e->getMessage(),
               'error'    => (bool)true
             ];
+
             $this->response = json_encode($response);
             return $this;
 
@@ -83,7 +84,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
 	/**
 	 * Create an API key for account
 	 *
-	 * @return string|boolean JSON encode key or false
+	 * @return string|bool JSON encode key or false
 	 */	
 	public function createApiKey()
 	{
@@ -106,7 +107,6 @@ abstract class LeadpagesLogin implements LeadpagesToken
 			}
 
         } catch (ClientException $e) {
-            //return false as token is bad
             $response = false;
 
         } catch (ConnectException $e) {
@@ -115,6 +115,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
 
         return $response;
     }
+
     /**
      * Parse response for call to Leadpages Login. If response does
      * not contain a error we will return a response with
