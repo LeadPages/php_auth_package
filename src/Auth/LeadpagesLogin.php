@@ -13,7 +13,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
     protected $client;
     public $response;
     public $keyUrl = 'https://api.leadpages.io/account/v1/keys';
-    public $loginurl = 'https://api.leadpages.io/account/v1/sessions';
+    public $loginUrl = 'https://api.leadpages.io/account/v1/sessions';
 
     /**
      * Token label that should be used to reference the token in the database for consistency across platforms
@@ -55,7 +55,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
         $body     = json_encode(['clientType' => 'wp-plugin']);
         try {
             $response = $this->client->post(
-              $this->loginurl, [
+              $this->loginUrl, [
                 'headers' => ['Authorization' => 'Basic ' . $authHash],
                 'verify'  => $this->certFile,
                 'body'    => $body //wp-plugin value makes session not expire
@@ -88,7 +88,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
 	public function createApiKey()
 	{
         try {
-            $response = $this->client->post($this->keyurl, [
+            $response = $this->client->post($this->keyUrl, [
                 'headers' => [
                     'LP-Security-Token' => $this->token,
                     'Content-Type' => 'application/json',
