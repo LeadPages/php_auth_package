@@ -88,7 +88,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
 	public function createApiKey()
 	{
         $authHeader = 'LP-Security-Token';
-        if (strpos($this->token, 'lp ') === 0) {
+        if (stripos($this->token, 'lp ') === 0) {
             $authHeader = 'Authorization';
         }
 
