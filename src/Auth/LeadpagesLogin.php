@@ -16,8 +16,8 @@ abstract class LeadpagesLogin implements LeadpagesToken
     public $loginurl = 'https://api.leadpages.io/account/v1/sessions';
 
     /**
-     * Token label that should be used to reference the token in the database for consistency across platforms
-     * and upgrades easier
+     * Token label that should be used to reference the token in the database 
+     * for consistency across platforms and upgrades easier
      * @var string
      */
     public $tokenLabel = 'leadpages_security_token';
@@ -44,8 +44,8 @@ abstract class LeadpagesLogin implements LeadpagesToken
     /**
      * get user information
      *
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      *
      * @return array|\GuzzleHttp\Message\FutureResponse|\GuzzleHttp\Message\ResponseInterface|\GuzzleHttp\Ring\Future\FutureInterface|null
      */
@@ -53,6 +53,7 @@ abstract class LeadpagesLogin implements LeadpagesToken
     {
         $authHash = $this->hashUserNameAndPassword($username, $password);
         $body     = json_encode(['clientType' => 'wp-plugin']);
+
         try {
             $response = $this->client->post(
               $this->loginurl, [
@@ -61,23 +62,22 @@ abstract class LeadpagesLogin implements LeadpagesToken
                 'body'    => $body //wp-plugin value makes session not expire
               ]);
             $this->response = $response->getBody();
-            return $this;
 
         } catch (ClientException $e) {
             $response       = [
               'code'     => $e->getCode(),
               'response' => $e->getMessage(),
-              'error'    => (bool)true
+              'error'    => true
             ];
             $this->response = json_encode($response);
-            return $this;
 
         } catch (ConnectException $e) {
             $message = 'Can not connect to Leadpages Server:';
             $response = $this->parseException($e, $message);
             $this->response = $response;
-            return $this;
         }
+
+        return $this;
     }
 
 	/**
@@ -104,21 +104,20 @@ abstract class LeadpagesLogin implements LeadpagesToken
             
 			$body = json_decode($response->getBody(), true);
 
+            $value = false;
 			if (array_key_exists('value', $body)) {
-                $response = $body['value'];
-            } else {
-				$response = false;
+                $value = $body['value'];
 			}
 
         } catch (ClientException $e) {
-            //return false as token is bad
-            $response = false;
+            // token is bad
+            $value = false;
 
         } catch (ConnectException $e) {
-            $response = false;
+            $value = false;
         }
 
-        return $response;
+        return $value;
     }
     /**
      * Parse response for call to Leadpages Login. If response does
@@ -127,19 +126,19 @@ abstract class LeadpagesLogin implements LeadpagesToken
      *
      * @param bool $deleteTokenOnFail
      *
-     * @return mixed
+     * @return string json encoded response for client to handle
      */
 	public function parseResponse($deleteTokenOnFail = false)
     {
         $responseArray = json_decode($this->response, true);
-        if (isset($responseArray['error']) && $responseArray['error'] == true) {
-            //token should be unset assumed to be no longer valid
+        if (isset($responseArray['error']) && $responseArray['error']) {
+            // token should be unset assumed to be no longer valid
             unset($this->token);
-            //delete token from data store if param is passed
-            if ($deleteTokenOnFail == true) {
+            // delete token from data store if param is passed
+            if ($deleteTokenOnFail) {
                 $this->deleteToken();
             }
-            return $this->response; //return json encoded response for client to handle
+            return $this->response; 
         }
         $this->token = $responseArray['securityToken'];
         return 'success';
@@ -154,28 +153,29 @@ abstract class LeadpagesLogin implements LeadpagesToken
      * set response property. really did not want to make this method
      * but it is needed for testing
      *
-     * @param $response
+     * @param mixed $response
+     *
+     * @return LeadpagesLogin
      */
     public function setLeadpagesResponse($response)
     {
         $this->response = $response;
+        return $this;
     }
 
     /**
-     * @param $e
-     *
-     * @param string $message
+     * @param Exception $e
+     * @param string    $message
      *
      * @return array
      */
     public function parseException($e, $message = '')
     {
-        $response = [
+        return [
           'code'     => $e->getCode(),
           'response' => $message . ' ' . $e->getMessage(),
-          'error'    => (bool)true
+          'error'    => true
         ];
-        return $response;
     }
 
 
